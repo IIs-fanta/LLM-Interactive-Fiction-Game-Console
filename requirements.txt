@@ -1,3 +1,2 @@
 dashscope>=1.13.0
-tk_html_widgets>=0.1.0
 markdown2>=2.4.0 
