@@ -235,6 +235,8 @@ class LLMAdventureGame:
 
     def start_game(self):
         """当玩家点击"开始/重置游戏"时触发。"""
+        print("开始游戏按钮被点击")  # 调试信息
+        
         api_key = self.api_key_entry.get().strip()
         host = self.host_entry.get().strip()
         model_name = self.model_entry.get().strip()
@@ -242,6 +244,10 @@ class LLMAdventureGame:
         length_range_text = self.length_entry.get().strip()
         story_type = self.story_type_entry.get().strip()
         option_style = self.option_style_entry.get().strip()
+
+        print(f"API Key: {api_key[:10]}..." if api_key else "API Key: 空")  # 调试信息
+        print(f"Host: {host}")  # 调试信息
+        print(f"Model: {model_name}")  # 调试信息
 
         if not api_key or not story_bg:
             messagebox.showerror("错误", "API-KEY 和 故事背景 不能为空！")
@@ -254,6 +260,8 @@ class LLMAdventureGame:
         if not host:
             messagebox.showerror("错误", "请输入Host地址！")
             return
+
+        print("开始设置API参数")  # 调试信息
 
         # 解析长度范围（形如 "300-500"）
         self.paragraph_min_chars, self.paragraph_max_chars = 300, 500
@@ -271,9 +279,19 @@ class LLMAdventureGame:
         # 安全上限，避免超出模型限制
         self.max_new_tokens = max(256, min(self.max_new_tokens, 8192))
 
+        print(f"设置API Key和Host")  # 调试信息
         dashscope.api_key = api_key
-        # 设置自定义host
-        dashscope.base_http_client.base_url = host
+        # 设置自定义host - 使用正确的方式
+        try:
+            # 尝试设置基础URL
+            if hasattr(dashscope, 'base_http_client') and hasattr(dashscope.base_http_client, 'base_url'):
+                dashscope.base_http_client.base_url = host
+            # 如果上面的方式不行，尝试其他方式
+            elif hasattr(dashscope, 'Generation') and hasattr(dashscope.Generation, 'base_url'):
+                dashscope.Generation.base_url = host
+        except Exception as e:
+            print(f"设置Host时出现警告（不影响正常使用）: {e}")
+        
         self.current_model = model_name  # 保存当前使用的模型
         self.story_type = story_type or ""
         self.option_style = option_style or ""
@@ -290,6 +308,7 @@ class LLMAdventureGame:
         self.update_story_display("游戏初始化中，正在为您生成开篇情节...")
         self.toggle_controls(is_generating=True)
 
+        print("开始生成故事")  # 调试信息
         self.generate_next_segment(initial_prompt=self.story_history)
 
     def submit_choice(self, event=None):
@@ -377,10 +396,12 @@ class LLMAdventureGame:
     def _call_llm_in_thread(self, system_prompt, user_prompt):
         """在后台线程中实际调用API，防止UI卡死。"""
         try:
+            print(f"开始调用API，模型: {self.current_model}")  # 调试信息
             messages = [
                 {"role": Role.SYSTEM, "content": system_prompt},
                 {"role": Role.USER, "content": user_prompt},
             ]
+            print(f"发送消息长度: {len(str(messages))}")  # 调试信息
             response = Generation.call(
                 model=self.current_model,
                 messages=messages,
@@ -389,8 +410,10 @@ class LLMAdventureGame:
                 max_length=getattr(self, 'max_new_tokens', 1024),
                 top_p=0.9
             )
+            print(f"API调用成功，状态码: {response.status_code}")  # 调试信息
             self.llm_queue.put(response)
         except Exception as e:
+            print(f"API调用失败: {str(e)}")  # 调试信息
             self.llm_queue.put({"error": str(e)})
 
     def check_llm_queue(self):
