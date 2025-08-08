@@ -29,6 +29,7 @@ class LLMAdventureGame:
         self.current_model = "qwen-turbo"  # 当前使用的模型名称
         self.paragraph_min_chars = 300 # 段落最小字数
         self.paragraph_max_chars = 500 # 段落最大字数
+        self.setup_collapsed = False  # 设置区域是否收起
 
         # --- 异步处理队列 ---
         self.llm_queue = queue.Queue()
@@ -53,40 +54,48 @@ class LLMAdventureGame:
         setup_frame = tk.LabelFrame(main_frame, text="游戏设置", padx=10, pady=10, bg="#f0f0f0", font=("Helvetica", 12))
         setup_frame.grid(row=0, column=0, sticky="nsew", pady=(0, 10))
 
-        tk.Label(setup_frame, text="API-KEY（找陈狗要）:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=0, column=0, sticky="w", padx=5, pady=5)
-        self.api_key_entry = tk.Entry(setup_frame, width=50, show="*", font=("Helvetica", 10))
+        # 设置区域内容框架
+        self.setup_content_frame = tk.Frame(setup_frame, bg="#f0f0f0")
+        self.setup_content_frame.pack(fill=tk.BOTH, expand=True)
+
+        tk.Label(self.setup_content_frame, text="API-KEY（找陈狗要）:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        self.api_key_entry = tk.Entry(self.setup_content_frame, width=50, show="*", font=("Helvetica", 10))
         self.api_key_entry.grid(row=0, column=1, sticky="ew", padx=5, pady=5)
 
-        tk.Label(setup_frame, text="输入模型:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=1, column=0, sticky="w", padx=5, pady=5)
-        self.model_entry = tk.Entry(setup_frame, width=50, font=("Helvetica", 10))
+        tk.Label(self.setup_content_frame, text="输入模型:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        self.model_entry = tk.Entry(self.setup_content_frame, width=50, font=("Helvetica", 10))
         self.model_entry.grid(row=1, column=1, sticky="ew", padx=5, pady=5)
         self.model_entry.insert(0, "qwen-turbo")  # 默认模型
 
-        tk.Label(setup_frame, text="单段字数范围:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=2, column=0, sticky="w", padx=5, pady=5)
-        self.length_entry = tk.Entry(setup_frame, width=50, font=("Helvetica", 10))
+        tk.Label(self.setup_content_frame, text="单段字数范围:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=2, column=0, sticky="w", padx=5, pady=5)
+        self.length_entry = tk.Entry(self.setup_content_frame, width=50, font=("Helvetica", 10))
         self.length_entry.grid(row=2, column=1, sticky="ew", padx=5, pady=5)
         self.length_entry.insert(0, "300-500")  # 默认段落长度范围
 
-        tk.Label(setup_frame, text="故事类型:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=3, column=0, sticky="w", padx=5, pady=5)
-        self.story_type_entry = tk.Entry(setup_frame, width=50, font=("Helvetica", 10))
+        tk.Label(self.setup_content_frame, text="故事类型:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=3, column=0, sticky="w", padx=5, pady=5)
+        self.story_type_entry = tk.Entry(self.setup_content_frame, width=50, font=("Helvetica", 10))
         self.story_type_entry.grid(row=3, column=1, sticky="ew", padx=5, pady=5)
         self.story_type_entry.insert(0, "末世/冒爽文/悬疑/擦边（自己输入）")
 
-        tk.Label(setup_frame, text="选项风格:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=4, column=0, sticky="w", padx=5, pady=5)
-        self.option_style_entry = tk.Entry(setup_frame, width=50, font=("Helvetica", 10))
+        tk.Label(self.setup_content_frame, text="选项风格:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=4, column=0, sticky="w", padx=5, pady=5)
+        self.option_style_entry = tk.Entry(self.setup_content_frame, width=50, font=("Helvetica", 10))
         self.option_style_entry.grid(row=4, column=1, sticky="ew", padx=5, pady=5)
         self.option_style_entry.insert(0, "爽文/擦边/激进（也是自己输入）")
 
-        tk.Label(setup_frame, text="故事背景设定:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=5, column=0, sticky="nw", padx=5, pady=5)
-        self.story_bg_text = scrolledtext.ScrolledText(setup_frame, height=5, wrap=tk.WORD, font=("Helvetica", 10))
+        tk.Label(self.setup_content_frame, text="故事背景设定:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=5, column=0, sticky="nw", padx=5, pady=5)
+        self.story_bg_text = scrolledtext.ScrolledText(self.setup_content_frame, height=5, wrap=tk.WORD, font=("Helvetica", 10))
         self.story_bg_text.grid(row=5, column=1, sticky="ew", padx=5, pady=5)
         self.story_bg_text.insert(tk.END, "我是爽文韩乘（这个也自己写）")
         
-        setup_frame.columnconfigure(1, weight=1)
+        self.setup_content_frame.columnconfigure(1, weight=1)
 
         # 按钮区域
         button_frame = tk.Frame(setup_frame)
-        button_frame.grid(row=6, column=0, columnspan=2, sticky="ew", pady=5)
+        button_frame.pack(fill=tk.X, pady=5)
+        
+        # 折叠按钮
+        self.toggle_setup_button = tk.Button(button_frame, text="收起设置", command=self.toggle_setup, font=("Helvetica", 9), bg="#607D8B", fg="white", relief=tk.FLAT, padx=8, pady=3)
+        self.toggle_setup_button.pack(side=tk.LEFT, padx=5)
         
         self.start_button = tk.Button(button_frame, text="开始 / 重置游戏", command=self.start_game, font=("Helvetica", 10, "bold"), bg="#4CAF50", fg="white", relief=tk.FLAT, padx=10, pady=5)
         self.start_button.pack(side=tk.RIGHT, padx=5)
@@ -131,6 +140,19 @@ class LLMAdventureGame:
         # 禁用选择输入，直到游戏开始
         self.choice_entry.config(state=tk.DISABLED)
         self.submit_button.config(state=tk.DISABLED)
+
+    def toggle_setup(self):
+        """切换设置区域的显示状态。"""
+        if self.setup_collapsed:
+            # 展开设置
+            self.setup_content_frame.pack(fill=tk.BOTH, expand=True)
+            self.toggle_setup_button.config(text="收起设置")
+            self.setup_collapsed = False
+        else:
+            # 收起设置
+            self.setup_content_frame.pack_forget()
+            self.toggle_setup_button.config(text="展开设置")
+            self.setup_collapsed = True
 
     def start_game(self):
         """当玩家点击"开始/重置游戏"时触发。"""
