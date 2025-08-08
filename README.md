@@ -29,7 +29,7 @@
 打开终端（或CMD/PowerShell）并运行以下命令：
 
 ```bash
-pip install -r requirements_final.txt
+pip install -r requirements.txt
 ```
 
 或者手动安装：
@@ -255,4 +255,5 @@ logging.basicConfig(level=logging.DEBUG)
 - 异步处理机制
 
 - Markdown渲染支持
+
 
