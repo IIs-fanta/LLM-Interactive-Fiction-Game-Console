@@ -1,5 +1,6 @@
 # 大语言模型文字冒险游戏
-<img width="1220" height="943" alt="image" src="https://github.com/user-attachments/assets/ff97d3d6-20f1-4a70-ba02-439a4e1f29a7" />
+<img width="1220" height="941" alt="image" src="https://github.com/user-attachments/assets/889a4729-1f3a-48e5-8ba7-c22ccf9c6384" />
+
 
 一个基于Python和大语言模型的智能文字冒险游戏框架，具备图形用户界面和动态故事生成功能。
 
@@ -255,5 +256,6 @@ logging.basicConfig(level=logging.DEBUG)
 - 异步处理机制
 
 - Markdown渲染支持
+
 
 
