@@ -1,7 +1,7 @@
 # 大语言模型文字冒险游戏
 <img width="1220" height="943" alt="image" src="https://github.com/user-attachments/assets/ff97d3d6-20f1-4a70-ba02-439a4e1f29a7" />
 
-一个基于Python和阿里云百炼API的智能文字冒险游戏框架，具备图形用户界面和动态故事生成功能。
+一个基于Python和大语言模型的智能文字冒险游戏框架，具备图形用户界面和动态故事生成功能。
 
 ## 功能特点
 
@@ -39,10 +39,10 @@ pip install dashscope
 pip install markdown2
 ```
 
-### 第二步：获取阿里云百炼API Key
+### 第二步：获取API Key
 
-1. 访问[阿里云百炼（DashScope）官方网站](https://dashscope.aliyun.com/)
-2. 登录您的阿里云账户
+1. 访问api key供应商网站
+2. 登录您的账户
 3. 进入"管理中心"，找到"API-KEY管理"
 4. 创建一个新的API Key并复制它
 5. 请妥善保管这个Key
@@ -255,3 +255,4 @@ logging.basicConfig(level=logging.DEBUG)
 - 异步处理机制
 
 - Markdown渲染支持
+
