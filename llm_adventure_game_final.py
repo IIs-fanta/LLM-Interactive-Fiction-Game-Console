@@ -8,6 +8,7 @@ import dashscope
 from dashscope import Generation
 from dashscope.api_entities.dashscope_response import Role
 import re
+import os
 
 class LLMAdventureGame:
     """
@@ -40,6 +41,69 @@ class LLMAdventureGame:
         # --- 启动队列检查循环 ---
         self.master.after(100, self.check_llm_queue)
 
+    def save_config(self):
+        """保存当前配置到文件。"""
+        try:
+            config = {
+                'api_key': self.api_key_entry.get().strip(),
+                'host': self.host_entry.get().strip(),
+                'model': self.model_entry.get().strip(),
+                'length_range': self.length_entry.get().strip(),
+                'story_type': self.story_type_entry.get().strip(),
+                'option_style': self.option_style_entry.get().strip(),
+                'story_bg': self.story_bg_text.get("1.0", tk.END).strip()
+            }
+            
+            with open('game_config.json', 'w', encoding='utf-8') as f:
+                json.dump(config, f, ensure_ascii=False, indent=2)
+            
+            messagebox.showinfo("成功", "配置已保存到 game_config.json 文件")
+        except Exception as e:
+            messagebox.showerror("错误", f"保存配置失败：{str(e)}")
+
+    def load_config(self):
+        """从文件加载配置。"""
+        try:
+            if not os.path.exists('game_config.json'):
+                messagebox.showwarning("警告", "没有找到配置文件 game_config.json")
+                return
+            
+            with open('game_config.json', 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            
+            # 加载配置到界面
+            if 'api_key' in config:
+                self.api_key_entry.delete(0, tk.END)
+                self.api_key_entry.insert(0, config['api_key'])
+            
+            if 'host' in config:
+                self.host_entry.delete(0, tk.END)
+                self.host_entry.insert(0, config['host'])
+            
+            if 'model' in config:
+                self.model_entry.delete(0, tk.END)
+                self.model_entry.insert(0, config['model'])
+            
+            if 'length_range' in config:
+                self.length_entry.delete(0, tk.END)
+                self.length_entry.insert(0, config['length_range'])
+            
+            if 'story_type' in config:
+                self.story_type_entry.delete(0, tk.END)
+                self.story_type_entry.insert(0, config['story_type'])
+            
+            if 'option_style' in config:
+                self.option_style_entry.delete(0, tk.END)
+                self.option_style_entry.insert(0, config['option_style'])
+            
+            if 'story_bg' in config:
+                self.story_bg_text.delete("1.0", tk.END)
+                self.story_bg_text.insert(tk.END, config['story_bg'])
+            
+            messagebox.showinfo("成功", "配置已从 game_config.json 文件加载")
+        except Exception as e:
+            messagebox.showerror("错误", f"加载配置失败：{str(e)}")
+
     def setup_ui(self):
         """初始化并布局所有UI组件。"""
         main_frame = tk.Frame(self.master, padx=10, pady=10, bg="#f0f0f0")
@@ -62,36 +126,51 @@ class LLMAdventureGame:
         self.api_key_entry = tk.Entry(self.setup_content_frame, width=50, show="*", font=("Helvetica", 10))
         self.api_key_entry.grid(row=0, column=1, sticky="ew", padx=5, pady=5)
 
-        tk.Label(self.setup_content_frame, text="输入模型:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        tk.Label(self.setup_content_frame, text="自定义Host:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        self.host_entry = tk.Entry(self.setup_content_frame, width=50, font=("Helvetica", 10))
+        self.host_entry.grid(row=1, column=1, sticky="ew", padx=5, pady=5)
+        self.host_entry.insert(0, "https://dashscope.aliyuncs.com")  # 默认host
+
+        tk.Label(self.setup_content_frame, text="输入模型:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=2, column=0, sticky="w", padx=5, pady=5)
         self.model_entry = tk.Entry(self.setup_content_frame, width=50, font=("Helvetica", 10))
-        self.model_entry.grid(row=1, column=1, sticky="ew", padx=5, pady=5)
+        self.model_entry.grid(row=2, column=1, sticky="ew", padx=5, pady=5)
         self.model_entry.insert(0, "qwen-turbo")  # 默认模型
 
-        tk.Label(self.setup_content_frame, text="单段字数范围:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=2, column=0, sticky="w", padx=5, pady=5)
+        tk.Label(self.setup_content_frame, text="单段字数范围:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=3, column=0, sticky="w", padx=5, pady=5)
         self.length_entry = tk.Entry(self.setup_content_frame, width=50, font=("Helvetica", 10))
-        self.length_entry.grid(row=2, column=1, sticky="ew", padx=5, pady=5)
-        self.length_entry.insert(0, "300-500")  # 默认段落长度范围
+        self.length_entry.grid(row=3, column=1, sticky="ew", padx=5, pady=5)
+        self.length_entry.insert(0, "800-1000")  # 默认段落长度范围
 
-        tk.Label(self.setup_content_frame, text="故事类型:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=3, column=0, sticky="w", padx=5, pady=5)
+        tk.Label(self.setup_content_frame, text="故事类型:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=4, column=0, sticky="w", padx=5, pady=5)
         self.story_type_entry = tk.Entry(self.setup_content_frame, width=50, font=("Helvetica", 10))
-        self.story_type_entry.grid(row=3, column=1, sticky="ew", padx=5, pady=5)
-        self.story_type_entry.insert(0, "末世/冒爽文/悬疑/擦边（自己输入）")
+        self.story_type_entry.grid(row=4, column=1, sticky="ew", padx=5, pady=5)
+        self.story_type_entry.insert(0, "末世/爽文/悬疑/（自己输入）")
 
-        tk.Label(self.setup_content_frame, text="选项风格:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=4, column=0, sticky="w", padx=5, pady=5)
+        tk.Label(self.setup_content_frame, text="选项风格:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=5, column=0, sticky="w", padx=5, pady=5)
         self.option_style_entry = tk.Entry(self.setup_content_frame, width=50, font=("Helvetica", 10))
-        self.option_style_entry.grid(row=4, column=1, sticky="ew", padx=5, pady=5)
-        self.option_style_entry.insert(0, "爽文/擦边/激进（也是自己输入）")
+        self.option_style_entry.grid(row=5, column=1, sticky="ew", padx=5, pady=5)
+        self.option_style_entry.insert(0, "爽文/激进（也是自己输入）")
 
-        tk.Label(self.setup_content_frame, text="故事背景设定:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=5, column=0, sticky="nw", padx=5, pady=5)
+        tk.Label(self.setup_content_frame, text="故事背景设定:", bg="#f0f0f0", font=("Helvetica", 10)).grid(row=6, column=0, sticky="nw", padx=5, pady=5)
         self.story_bg_text = scrolledtext.ScrolledText(self.setup_content_frame, height=5, wrap=tk.WORD, font=("Helvetica", 10))
-        self.story_bg_text.grid(row=5, column=1, sticky="ew", padx=5, pady=5)
-        self.story_bg_text.insert(tk.END, "我是爽文韩乘（这个也自己写）")
+        self.story_bg_text.grid(row=6, column=1, sticky="ew", padx=5, pady=5)
+        self.story_bg_text.insert(tk.END, "（这个也自己写）")
         
         self.setup_content_frame.columnconfigure(1, weight=1)
 
         # 按钮区域
         button_frame = tk.Frame(setup_frame)
         button_frame.pack(fill=tk.X, pady=5)
+        
+        # 配置管理按钮
+        config_frame = tk.Frame(button_frame)
+        config_frame.pack(side=tk.LEFT, padx=5)
+        
+        self.save_config_button = tk.Button(config_frame, text="保存配置", command=self.save_config, font=("Helvetica", 9), bg="#2196F3", fg="white", relief=tk.FLAT, padx=8, pady=3)
+        self.save_config_button.pack(side=tk.LEFT, padx=2)
+        
+        self.load_config_button = tk.Button(config_frame, text="加载配置", command=self.load_config, font=("Helvetica", 9), bg="#FF9800", fg="white", relief=tk.FLAT, padx=8, pady=3)
+        self.load_config_button.pack(side=tk.LEFT, padx=2)
         
         # 折叠按钮
         self.toggle_setup_button = tk.Button(button_frame, text="收起设置", command=self.toggle_setup, font=("Helvetica", 9), bg="#607D8B", fg="white", relief=tk.FLAT, padx=8, pady=3)
@@ -157,6 +236,7 @@ class LLMAdventureGame:
     def start_game(self):
         """当玩家点击"开始/重置游戏"时触发。"""
         api_key = self.api_key_entry.get().strip()
+        host = self.host_entry.get().strip()
         model_name = self.model_entry.get().strip()
         story_bg = self.story_bg_text.get("1.0", tk.END).strip()
         length_range_text = self.length_entry.get().strip()
@@ -169,6 +249,10 @@ class LLMAdventureGame:
 
         if not model_name:
             messagebox.showerror("错误", "请输入模型名称！")
+            return
+
+        if not host:
+            messagebox.showerror("错误", "请输入Host地址！")
             return
 
         # 解析长度范围（形如 "300-500"）
@@ -188,6 +272,8 @@ class LLMAdventureGame:
         self.max_new_tokens = max(256, min(self.max_new_tokens, 8192))
 
         dashscope.api_key = api_key
+        # 设置自定义host
+        dashscope.base_http_client.base_url = host
         self.current_model = model_name  # 保存当前使用的模型
         self.story_type = story_type or ""
         self.option_style = option_style or ""
